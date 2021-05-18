@@ -14,4 +14,6 @@ WORKDIR /app
 
 COPY ./ /app/
 
+RUN chown -R root:root /app
+
 CMD gunicorn main.wsgi:application -c /app/gunicorn.conf.py

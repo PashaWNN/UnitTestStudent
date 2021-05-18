@@ -15,12 +15,12 @@ class User(AbstractUser):
     )
 
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
         student_group = get_student_group()
         if self.is_student:
             self.groups.add(student_group)
         else:
             self.groups.remove(student_group)
-        return super().save(*args, **kwargs)
 
 
 class Environment(models.Model):
