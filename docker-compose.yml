@@ -1,0 +1,55 @@
+version: '3.7'
+services:
+
+  web:
+    build: .
+    restart: "no"
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+      - static_volume:/app/staticfiles
+      - uploads_volume:/app/uploads
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - .env
+    expose:
+      - 8000
+    depends_on:
+      - redis
+
+  celery-worker:
+    build: .
+    command: celery -A main worker --loglevel=INFO
+    restart: "no"
+    volumes:
+      - ./:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:5.0.7-alpine
+    restart: "no"
+    command: >
+      redis-server --save 900 1 --save 300 10 --save 60 10000 --dir
+      /data --maxmemory 64mb --maxmemory-policy volatile-lru
+    volumes:
+      - redis:/data
+
+  nginx:
+    build: ./nginx
+    ports:
+      - 8080:80
+    volumes:
+    - static_volume:/web/staticfiles
+    - uploads_volume:/web/uploads
+    depends_on:
+      - web
+
+volumes:
+  redis:
+  static_volume:
+  uploads_volume:
