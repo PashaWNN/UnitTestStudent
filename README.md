@@ -6,7 +6,8 @@
 
 ```shell script
 docker compose up
-
+# Создаём базу данных:
+docker compose exec web python manage.py migrate
 # Создание администратора:
 docker compose exec web python manage.py createsuperuser
 # Следуйте инструкциям для создания администратора
