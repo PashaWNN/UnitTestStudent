@@ -5,7 +5,6 @@ from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.utils import unquote
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.forms import forms
 from django.http import HttpResponseRedirect
@@ -14,19 +13,24 @@ from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import TemplateView
-
 from uts.models import Task, Solution, Environment, User
 
 
-admin.site.unregister(Group)
-admin.site.site_title = ''
-admin.site.site_header = 'UnitTestStudent'
-admin.site.index_title = ''
-admin.site.site_url = None
+class MyAdminSite(admin.AdminSite):
+    site_title = 'UnitTestStudent'
+    site_header = 'UnitTestStudent'
+    index_title = ' '
+    site_url = None
+
+    def app_index(self, request, app_label, extra_context=None):
+        response: TemplateResponse = super().app_index(request, app_label, extra_context)
+        response.context_data['title'] = None
+        return response
 
 
-@admin.register(get_user_model())
+admin_site = MyAdminSite()
+
+
 class CustomUserAdmin(UserAdmin):
     view_on_site = False
     fieldsets = (
@@ -42,6 +46,9 @@ class CustomUserAdmin(UserAdmin):
     def save_model(self, request, obj: User, form, change):
         obj.is_staff = True
         super().save_model(request, obj, form, change)
+
+
+admin_site.register(get_user_model(), CustomUserAdmin)
 
 
 class TaskStateFilter(SimpleListFilter):
@@ -69,7 +76,6 @@ class TaskStateFilter(SimpleListFilter):
             return queryset.exclude(solution__author=request.user, solution__checked=True)
 
 
-@admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     change_form_template = 'uts/admin_task_student_form.html'
     search_fields = 'name',
@@ -147,7 +153,9 @@ class TaskAdmin(admin.ModelAdmin):
         return TemplateResponse(request, 'uts/solution_form.html', context)
 
 
-@admin.register(Solution)
+admin_site.register(Task, TaskAdmin)
+
+
 class SolutionAdmin(admin.ModelAdmin):
     readonly_fields = 'created_at', 'log', 'author', 'task', 'state', 'solution_file'
     list_display = '__str__', 'state', 'checked', 'created_at'
@@ -167,7 +175,12 @@ class SolutionAdmin(admin.ModelAdmin):
         return qs
 
 
-@admin.register(Environment)
+admin_site.register(Solution, SolutionAdmin)
+
+
 class EnvironmentAdmin(admin.ModelAdmin):
     list_display = 'name', 'docker_image'
     search_fields = 'name', 'docker_image'
+
+
+admin_site.register(Environment, EnvironmentAdmin)
