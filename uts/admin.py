@@ -31,6 +31,7 @@ class MyAdminSite(admin.AdminSite):
 admin_site = MyAdminSite()
 
 
+@admin.register(User, site=MyAdminSite)
 class CustomUserAdmin(UserAdmin):
     view_on_site = False
     fieldsets = (
@@ -46,9 +47,6 @@ class CustomUserAdmin(UserAdmin):
     def save_model(self, request, obj: User, form, change):
         obj.is_staff = True
         super().save_model(request, obj, form, change)
-
-
-admin_site.register(get_user_model(), CustomUserAdmin)
 
 
 class TaskStateFilter(SimpleListFilter):
@@ -76,6 +74,7 @@ class TaskStateFilter(SimpleListFilter):
             return queryset.exclude(solution__author=request.user, solution__checked=True)
 
 
+@admin.register(Task, site=MyAdminSite)
 class TaskAdmin(admin.ModelAdmin):
     change_form_template = 'uts/admin_task_student_form.html'
     search_fields = 'name',
@@ -153,9 +152,7 @@ class TaskAdmin(admin.ModelAdmin):
         return TemplateResponse(request, 'uts/solution_form.html', context)
 
 
-admin_site.register(Task, TaskAdmin)
-
-
+@admin.register(Solution, site=MyAdminSite)
 class SolutionAdmin(admin.ModelAdmin):
     readonly_fields = 'created_at', 'log', 'author', 'task', 'state', 'solution_file'
     list_display = '__str__', 'state', 'checked', 'created_at'
@@ -175,12 +172,7 @@ class SolutionAdmin(admin.ModelAdmin):
         return qs
 
 
-admin_site.register(Solution, SolutionAdmin)
-
-
+@admin.register(Solution, site=MyAdminSite)
 class EnvironmentAdmin(admin.ModelAdmin):
     list_display = 'name', 'docker_image'
     search_fields = 'name', 'docker_image'
-
-
-admin_site.register(Environment, EnvironmentAdmin)
