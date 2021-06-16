@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from uts.models import Task, Solution, Environment, User
+from uts.utils import get_student_group
 
 
 class MyAdminSite(admin.AdminSite):
@@ -90,6 +91,13 @@ class TaskAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(reverse('admin:upload-solution', args=(object_id,)))
         return super()._changeform_view(request, object_id, form_url, extra_context)
 
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        student_group = get_student_group()
+        if request.user.groups.filter(pk=student_group.pk).count():
+            remove_from_fieldsets(fieldsets, ('tests_file',))
+        return fieldsets
+
     def get_urls(self):
         urls = super().get_urls()
 
@@ -154,6 +162,19 @@ class TaskAdmin(admin.ModelAdmin):
 
 
 admin_site.register(Task, TaskAdmin)
+
+
+def remove_from_fieldsets(fieldsets, fields):
+    for fieldset in fieldsets:
+        for field in fields:
+            if field in fieldset[1]['fields']:
+                new_fields = []
+                for new_field in fieldset[1]['fields']:
+                    if not new_field in fields:
+                        new_fields.append(new_field)
+
+                fieldset[1]['fields'] = tuple(new_fields)
+                break
 
 
 class SolutionAdmin(admin.ModelAdmin):
