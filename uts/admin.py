@@ -4,7 +4,6 @@ from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.utils import unquote
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.forms import forms
 from django.http import HttpResponseRedirect
@@ -13,7 +12,7 @@ from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
-from uts.models import Task, Solution, Environment, User
+from uts.models import Task, Solution, User
 from uts.utils import get_student_group
 
 
