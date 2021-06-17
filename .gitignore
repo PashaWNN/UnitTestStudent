@@ -4,3 +4,4 @@ __pycache__
 uploads
 .idea
 venv
+.DS_Store
