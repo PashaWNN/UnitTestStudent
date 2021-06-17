@@ -22,6 +22,7 @@ services:
     restart: "no"
     volumes:
       - ./:/app
+      - uploads_volume:/app/uploads:rw
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - .env
@@ -49,8 +50,18 @@ services:
     depends_on:
       - web
 
+  postgres:
+    image: postgres:latest
+    volumes:
+      - database:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=uts
+
 volumes:
   redis:
   static_volume:
   uploads_volume:
   database_volume:
+  database:
